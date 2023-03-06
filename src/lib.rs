@@ -3,11 +3,9 @@ use std::ptr::NonNull;
 pub mod sys;
 
 struct JitMemory {
-    ptr: NonNull<()>
+    ptr: NonNull<()>,
 }
 
 impl JitMemory {
-    pub fn new(capacity: usize) {
-
-    }
+    pub fn new(capacity: usize) {}
 }
