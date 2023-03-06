@@ -1,11 +1,20 @@
+use std::marker::PhantomData;
 use std::ptr::NonNull;
 
-pub mod sys;
+pub mod arg;
+pub mod mem;
+mod sys;
 
-struct JitMemory {
-    ptr: NonNull<()>,
+/*
+pub struct CFunction<'a> {
+    compiled: NonNull<()>,
+    _mark: PhantomData<&'a ()>
 }
 
-impl JitMemory {
-    pub fn new(capacity: usize) {}
+impl<'a> CFunction<'a> {
+    pub fn from_raw(raw_cfuncion: extern "C" fn(*mut ()), arg: *mut ()) {
+
+    }
 }
+
+ */

@@ -1,8 +1,4 @@
-use std::ptr::null_mut;
-
-use ffi::sys::windows::{
-    VirtualAlloc, VirtualProtect, MEM_COMMIT, MEM_RESERVE, PAGE_EXECUTE, PAGE_READWRITE,
-};
+use ffi::mem::AllocatedMemory;
 
 fn main() {
     let my = [0xe8, 0x2f, 0x00, 0xf9];
@@ -54,36 +50,11 @@ fn main() {
         ]
         .concat();
 
-        #[repr(C)]
-        struct MyStruct {
-            fa: i64,
-            fb: i64,
-            fc: [u8; 4],
-        }
-        extern "C" fn stru() {}
+        let mut mem = AllocatedMemory::new(code.len()).unwrap();
 
-        let size = code.len();
-        let mem = VirtualAlloc(null_mut(), size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+        mem.write(&code, 0).unwrap();
 
-        if mem.is_null() {
-            panic!(
-                "virtual alloc returns null, err: {}",
-                std::io::Error::last_os_error()
-            );
-        }
-
-        let mem_w = mem as *mut u8;
-        std::ptr::copy(code.as_ptr(), mem_w, size);
-
-        let mut flag = 0;
-        if VirtualProtect(mem, size, PAGE_EXECUTE, &mut flag) == 0 {
-            panic!(
-                "failed to protect, err: {}",
-                std::io::Error::last_os_error()
-            );
-        }
-
-        let fp: extern "C" fn() = std::mem::transmute(mem);
+        let fp: extern "C" fn() = std::mem::transmute(mem.as_ptr());
         fp();
 
         drop(closure)
