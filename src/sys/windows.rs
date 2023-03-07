@@ -1,18 +1,6 @@
+use super::definitions::*;
+use std::io::{Error as IOError, Result as IOResult};
 use std::ptr::{null_mut, NonNull};
-
-pub type DWORD = u32;
-pub type PDWORD = *mut DWORD;
-
-pub type LPVOID = *mut ();
-pub type BOOL = std::ffi::c_int;
-
-pub const MEM_COMMIT: DWORD = 0x00001000;
-pub const MEM_RESERVE: DWORD = 0x00002000;
-
-pub const PAGE_READWRITE: DWORD = 0x04;
-pub const PAGE_EXECUTE: DWORD = 0x10;
-
-pub const PAGE_EXECUTE_READWRITE: DWORD = 0x04;
 
 extern "stdcall" {
     pub fn VirtualAlloc(addr: LPVOID, size: usize, fl_al_type: DWORD, fl_protect: DWORD) -> LPVOID;
@@ -30,9 +18,6 @@ pub struct AllocatedMemory {
     capacity: usize,
 }
 
-type IOResult<T> = std::io::Result<T>;
-type IOError = std::io::Error;
-
 #[inline]
 fn success_or_err<F: FnOnce() -> BOOL>(f: F) -> IOResult<()> {
     if f() == 0 {
@@ -48,7 +33,7 @@ impl AllocatedMemory {
             unsafe { VirtualAlloc(null_mut(), capacity, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE) };
 
         NonNull::new(ptr)
-            .map(|nn| Self { ptr: nn, capacity })
+            .map(|ptr| Self { ptr, capacity })
             .ok_or_else(std::io::Error::last_os_error)
     }
 

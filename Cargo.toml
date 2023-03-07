@@ -5,3 +5,6 @@ edition = "2021"
 
 [dependencies]
 cfg-if = "1"
+
+[build-dependencies]
+cfg_aliases = "0.1.1"

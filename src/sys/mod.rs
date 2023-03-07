@@ -1,3 +1,5 @@
+mod definitions;
+
 use cfg_if::cfg_if;
 
 cfg_if! {
@@ -5,7 +7,8 @@ cfg_if! {
         mod windows;
         pub use windows::*;
     } else if #[cfg(unix)] {
-
+        mod unix;
+        pub use unix::*;
     } else {
 
     }
