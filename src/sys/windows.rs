@@ -6,12 +6,8 @@ use std::ptr::{null_mut, NonNull};
 extern "stdcall" {
     fn VirtualAlloc(addr: LPVOID, size: usize, fl_al_type: DWORD, fl_protect: DWORD) -> LPVOID;
 
-    fn VirtualProtect(
-        addr: LPVOID,
-        size: usize,
-        fl_protect: DWORD,
-        fl_protect_old: PDWORD,
-    ) -> BOOL;
+    fn VirtualProtect(addr: LPVOID, size: usize, fl_protect: DWORD, fl_protect_old: PDWORD)
+        -> BOOL;
 
     fn VirtualFree(addr: LPVOID, size: usize, free_type: DWORD) -> BOOL;
 }
@@ -69,9 +65,7 @@ impl AllocatedMemory {
 
     pub fn try_free(self) -> IOResult<()> {
         let mut m = ManuallyDrop::new(self);
-        unsafe {
-            m.try_release()
-        }
+        unsafe { m.try_release() }
     }
 
     unsafe fn try_release(&mut self) -> IOResult<()> {
@@ -82,7 +76,8 @@ impl AllocatedMemory {
 impl Drop for AllocatedMemory {
     fn drop(&mut self) {
         unsafe {
-            self.try_release().unwrap_or_else(|e| panic!("release mem({:p}) failed: {e}", self.ptr))
+            self.try_release()
+                .unwrap_or_else(|e| panic!("release mem({:p}) failed: {e}", self.ptr))
         }
     }
 }
