@@ -1,16 +1,19 @@
 use super::definitions::*;
 use std::io::{Error as IOError, Result as IOResult};
+use std::mem::ManuallyDrop;
 use std::ptr::{null_mut, NonNull};
 
 extern "stdcall" {
-    pub fn VirtualAlloc(addr: LPVOID, size: usize, fl_al_type: DWORD, fl_protect: DWORD) -> LPVOID;
+    fn VirtualAlloc(addr: LPVOID, size: usize, fl_al_type: DWORD, fl_protect: DWORD) -> LPVOID;
 
-    pub fn VirtualProtect(
+    fn VirtualProtect(
         addr: LPVOID,
         size: usize,
         fl_protect: DWORD,
         fl_protect_old: PDWORD,
     ) -> BOOL;
+
+    fn VirtualFree(addr: LPVOID, size: usize, free_type: DWORD) -> BOOL;
 }
 
 pub struct AllocatedMemory {
@@ -38,12 +41,12 @@ impl AllocatedMemory {
     }
 
     pub unsafe fn write(&mut self, buf: &[u8], offset: isize) -> IOResult<()> {
-        let origin = self.protect(PAGE_READWRITE)?;
+        self.protect(PAGE_READWRITE)?;
 
         let ptr = self.ptr.as_ptr() as *mut u8;
         std::ptr::copy(buf.as_ptr(), ptr.offset(offset), buf.len());
 
-        self.protect(origin)?;
+        self.protect(PAGE_EXECUTE)?;
 
         Ok(())
     }
@@ -62,5 +65,24 @@ impl AllocatedMemory {
         }
 
         Ok(origin)
+    }
+
+    pub fn try_free(self) -> IOResult<()> {
+        let mut m = ManuallyDrop::new(self);
+        unsafe {
+            m.try_release()
+        }
+    }
+
+    unsafe fn try_release(&mut self) -> IOResult<()> {
+        success_or_err(|| VirtualFree(self.ptr.as_ptr(), 0, MEM_DECOMMIT))
+    }
+}
+
+impl Drop for AllocatedMemory {
+    fn drop(&mut self) {
+        unsafe {
+            self.try_release().unwrap_or_else(|e| panic!("release mem({:p}) failed: {e}", self.ptr))
+        }
     }
 }

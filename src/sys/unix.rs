@@ -68,14 +68,14 @@ extern "C" {
     fn pthread_jit_write_protect_np(enabled: c_int);
 }
 
+#[cfg(apple)]
 #[inline]
 unsafe fn enter_jit_write() {
-    #[cfg(apple)]
     pthread_jit_write_protect_np(0);
 }
 
+#[cfg(apple)]
 #[inline]
 unsafe fn exit_jit_write() {
-    #[cfg(apple)]
     pthread_jit_write_protect_np(1);
 }
