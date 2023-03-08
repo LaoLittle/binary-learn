@@ -69,7 +69,7 @@ impl AllocatedMemory {
     }
 
     unsafe fn try_release(&mut self) -> IOResult<()> {
-        success_or_err(|| VirtualFree(self.ptr.as_ptr(), 0, MEM_DECOMMIT))
+        success_or_err(|| VirtualFree(self.ptr.as_ptr(), 0, MEM_RELEASE))
     }
 }
 
